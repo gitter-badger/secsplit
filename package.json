@@ -1,29 +1,29 @@
 {
-    "name": "secsplit",
-    "version": "0.0.1",
-    "description": "A currently not-secure information splitter. Relies on XOR one time pads combined with AES-GCM for verification Edit",
-    "main": "index.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/harryshipton/secsplit.git"
-    },
-    "author": "Harry Shipton",
-    "license": "ISC",
-    "bugs": {
-        "url": "https://github.com/harryshipton/secsplit/issues"
-    },
-    "homepage": "https://github.com/harryshipton/secsplit#readme",
-    "dependencies": {
-        "bitwise-xor": "github:harryshipton/node-bitwise-xor",
-        "command-line-args": "^4.0.2",
-        "command-line-commands": "^2.0.0",
-        "mkdirp": "^0.5.1",
-        "node-forge": "^0.7.1"
-    },
-    "bin": {
-        "secsplit": "bin/secsplit"
-    }
+  "name": "secsplit",
+  "version": "0.0.2",
+  "description": "A currently not-secure information splitter. Relies on XOR one time pads combined with AES-GCM for verification Edit",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harryshipton/secsplit.git"
+  },
+  "author": "Harry Shipton",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/harryshipton/secsplit/issues"
+  },
+  "homepage": "https://github.com/harryshipton/secsplit#readme",
+  "dependencies": {
+    "bitwise-xor": "github:harryshipton/node-bitwise-xor",
+    "command-line-args": "^4.0.2",
+    "command-line-commands": "^2.0.0",
+    "mkdirp": "^0.5.1",
+    "node-forge": "^0.7.1"
+  },
+  "bin": {
+    "secsplit": "bin/secsplit"
+  }
 }
