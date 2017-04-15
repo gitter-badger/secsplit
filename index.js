@@ -58,6 +58,12 @@ function writeFile(filePath, contents) {
     mkdirp.sync(path.dirname(filePath));
     fs.writeFileSync(filePath, contents);
 }
+function strToB64(str) {
+    return Buffer.from(str, 'binary').toString('base64');
+}
+function b64ToStr(str) {
+    return Buffer.from(str, 'base64').toString('binary');
+}
 
 const {command, argv} = commandLineCommands(VALID_COMMANDS);
 
@@ -70,8 +76,8 @@ if(command === 'shard') {
         quitApplication('Invalid key', 0);
     }
 
-    const masterKey = enc.generateMasterKey(options.password, key.salt);
-    const shardKeyObject = enc.decrypt(key.enc, masterKey, key.iv, key.tag);
+    const masterKey = enc.generateMasterKey(options.password, b64ToStr(key.salt));
+    const shardKeyObject = enc.decrypt(b64ToStr(key.enc), masterKey, b64ToStr(key.iv), b64ToStr(key.tag));
 
     if(!shardKeyObject.pass) {
         quitApplication('Shard key invalid/password incorrect', 0);
@@ -89,11 +95,11 @@ if(command === 'shard') {
     const encryptedShards = shards.map((shard) => {
         const encryptedShardObject = {
             type: 'shard',
-            iv: enc.generateRandomBytes(12)
+            iv: strToB64(enc.generateRandomBytes(12))
         }
-        const encrypted = enc.encrypt(shard, shardKey, encryptedShardObject.iv);
-        encryptedShardObject['enc'] = encrypted.encrypted;
-        encryptedShardObject['tag'] = encrypted.tag;
+        const encrypted = enc.encrypt(shard, shardKey, b64ToStr(encryptedShardObject.iv));
+        encryptedShardObject['enc'] = strToB64(encrypted.encrypted);
+        encryptedShardObject['tag'] = strToB64(encrypted.tag);
         return encryptedShardObject;
     });
 
@@ -111,8 +117,8 @@ else if(command === 'reshard') {
         quitApplication('Invalid key', 0);
     }
 
-    const masterKey = enc.generateMasterKey(options.password, key.salt);
-    const shardKeyObject = enc.decrypt(key.enc, masterKey, key.iv, key.tag);
+    const masterKey = enc.generateMasterKey(options.password, b64ToStr(key.salt));
+    const shardKeyObject = enc.decrypt(b64ToStr(key.enc), masterKey, b64ToStr(key.iv), b64ToStr(key.tag));
 
     if(!shardKeyObject.pass) {
         quitApplication('Shard key invalid/password incorrect', 0);
@@ -125,7 +131,7 @@ else if(command === 'reshard') {
         quitApplication('Invalid shard', 0);
     }
 
-    const originalShardObject = enc.decrypt(encryptedOriginalShard.enc, shardKey, encryptedOriginalShard.iv, encryptedOriginalShard.tag);
+    const originalShardObject = enc.decrypt(b64ToStr(encryptedOriginalShard.enc), shardKey, b64ToStr(encryptedOriginalShard.iv), b64ToStr(encryptedOriginalShard.tag));
 
     if(!originalShardObject.pass) {
         quitApplication('Shard corrupt/modified', 0);
@@ -141,11 +147,11 @@ else if(command === 'reshard') {
     const encryptedShards = shards.map((shard) => {
         const encryptedShardObject = {
             type: 'shard',
-            iv: enc.generateRandomBytes(12)
+            iv: strToB64(enc.generateRandomBytes(12))
         }
-        const encrypted = enc.encrypt(shard, shardKey, encryptedShardObject.iv);
-        encryptedShardObject['enc'] = encrypted.encrypted;
-        encryptedShardObject['tag'] = encrypted.tag;
+        const encrypted = enc.encrypt(shard, shardKey, b64ToStr(encryptedShardObject.iv));
+        encryptedShardObject['enc'] = strToB64(encrypted.encrypted);
+        encryptedShardObject['tag'] = strToB64(encrypted.tag);
         return encryptedShardObject;
     });
 
@@ -163,8 +169,8 @@ else if(command === 'merge') {
         quitApplication('Invalid key', 0);
     }
 
-    const masterKey = enc.generateMasterKey(options.password, key.salt);
-    const shardKeyObject = enc.decrypt(key.enc, masterKey, key.iv, key.tag);
+    const masterKey = enc.generateMasterKey(options.password, b64ToStr(key.salt));
+    const shardKeyObject = enc.decrypt(b64ToStr(key.enc), masterKey, b64ToStr(key.iv), b64ToStr(key.tag));
 
     if(!shardKeyObject.pass) {
         quitApplication('Shard key invalid/password incorrect', 0);
@@ -178,7 +184,7 @@ else if(command === 'merge') {
             quitApplication('Invalid shard: ' + shardPath, 0);
         }
 
-        const originalShardObject = enc.decrypt(encryptedOriginalShard.enc, shardKey, encryptedOriginalShard.iv, encryptedOriginalShard.tag);
+        const originalShardObject = enc.decrypt(b64ToStr(encryptedOriginalShard.enc), shardKey, b64ToStr(encryptedOriginalShard.iv), b64ToStr(encryptedOriginalShard.tag));
 
         if(!originalShardObject.pass) {
             quitApplication('Shard corrupt/modified', 0);
@@ -202,9 +208,9 @@ else if(command === 'chpass') {
         quitApplication('Invalid key', 0);
     }
 
-    const masterKey = enc.generateMasterKey(options.oldpassword, oldKey.salt);
+    const masterKey = enc.generateMasterKey(options.oldpassword, b64ToStr(oldKey.salt));
 
-    const shardKeyObject = enc.decrypt(oldKey.enc, masterKey, oldKey.iv, oldKey.tag);
+    const shardKeyObject = enc.decrypt(b64ToStr(oldKey.enc), masterKey, b64ToStr(oldKey.iv), b64ToStr(oldKey.tag));
 
     if(!shardKeyObject.pass) {
         quitApplication('Shard key invalid/password incorrect', 0);
@@ -212,15 +218,15 @@ else if(command === 'chpass') {
 
     const newKeyObject = {
         type: 'key',
-        salt: enc.generateMasterKeySalt(),
-        iv: enc.generateRandomBytes(12)
+        salt: strToB64(enc.generateMasterKeySalt()),
+        iv: strToB64(enc.generateRandomBytes(12))
     }
 
-    const newMasterKey = enc.generateMasterKey(options.newpassword, newKeyObject.salt);
+    const newMasterKey = enc.generateMasterKey(options.newpassword, b64ToStr(newKeyObject.salt));
 
-    const encrypted = enc.encrypt(shardKeyObject.decrypted, newMasterKey, newKeyObject.iv);
-    newKeyObject['enc'] = encrypted.encrypted;
-    newKeyObject['tag'] = encrypted.tag;
+    const encrypted = enc.encrypt(shardKeyObject.decrypted, newMasterKey, b64ToStr(newKeyObject.iv));
+    newKeyObject['enc'] = strToB64(encrypted.encrypted);
+    newKeyObject['tag'] = strToB64(encrypted.tag);
 
     const jsonNewKeyObject = JSON.stringify(newKeyObject);
 
@@ -233,15 +239,15 @@ else if(command === 'genkey') {
 
     const keyObject = {
         type: 'key',
-        salt: enc.generateMasterKeySalt(),
-        iv: enc.generateRandomBytes(12)
+        salt: strToB64(enc.generateMasterKeySalt()),
+        iv: strToB64(enc.generateRandomBytes(12))
     }
 
-    const masterKey = enc.generateMasterKey(options.password, keyObject.salt);
+    const masterKey = enc.generateMasterKey(options.password, b64ToStr(keyObject.salt));
 
-    const encrypted = enc.encrypt(enc.generateRandomBytes(32), masterKey, keyObject.iv);
-    keyObject['enc'] = encrypted.encrypted;
-    keyObject['tag'] = encrypted.tag;
+    const encrypted = enc.encrypt(enc.generateRandomBytes(32), masterKey, b64ToStr(keyObject.iv));
+    keyObject['enc'] = strToB64(encrypted.encrypted);
+    keyObject['tag'] = strToB64(encrypted.tag);
 
     const jsonKeyObject = JSON.stringify(keyObject);
 
