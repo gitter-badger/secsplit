@@ -10,6 +10,12 @@ You have been warned.
 
 You can seperate documents out to different physical (or digital) locations. Assuming that the physical/digital locations have perfect security, it wouldn't matter if the AES algorithm breaks, since XOR one time pads provide theoretically perfect security.
 
+# Installing
+
+You can install it like:
+```bash
+npm install -g secsplit
+``` 
 
 # How do I use this thing?
 
