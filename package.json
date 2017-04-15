@@ -18,8 +18,6 @@
   "homepage": "https://github.com/harryshipton/secsplit#readme",
   "dependencies": {
     "bitwise-xor": "github:harryshipton/node-bitwise-xor",
-    "bluebird": "^3.5.0",
-    "colors": "^1.1.2",
     "command-line-args": "^4.0.2",
     "command-line-commands": "^2.0.0",
     "mkdirp": "^0.5.1",
