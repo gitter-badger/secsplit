@@ -80,7 +80,7 @@ if(command === 'shard') {
     const shardKeyObject = enc.decrypt(b64ToStr(key.enc), masterKey, b64ToStr(key.iv), b64ToStr(key.tag));
 
     if(!shardKeyObject.pass) {
-        quitApplication('Shard key invalid/password incorrect', 0);
+        quitApplication('Shard key invalid, or password is incorrect', 0);
     }
 
     const shardKey = shardKeyObject.decrypted;
@@ -121,7 +121,7 @@ else if(command === 'reshard') {
     const shardKeyObject = enc.decrypt(b64ToStr(key.enc), masterKey, b64ToStr(key.iv), b64ToStr(key.tag));
 
     if(!shardKeyObject.pass) {
-        quitApplication('Shard key invalid/password incorrect', 0);
+        quitApplication('Shard key invalid, or password is incorrect', 0);
     }
 
     const shardKey = shardKeyObject.decrypted;
@@ -173,7 +173,7 @@ else if(command === 'merge') {
     const shardKeyObject = enc.decrypt(b64ToStr(key.enc), masterKey, b64ToStr(key.iv), b64ToStr(key.tag));
 
     if(!shardKeyObject.pass) {
-        quitApplication('Shard key invalid/password incorrect', 0);
+        quitApplication('Shard key invalid, or password is incorrect', 0);
     }
 
     const shardKey = shardKeyObject.decrypted;
@@ -213,7 +213,7 @@ else if(command === 'chpass') {
     const shardKeyObject = enc.decrypt(b64ToStr(oldKey.enc), masterKey, b64ToStr(oldKey.iv), b64ToStr(oldKey.tag));
 
     if(!shardKeyObject.pass) {
-        quitApplication('Shard key invalid/password incorrect', 0);
+        quitApplication('Shard key invalid, or password is incorrect', 0);
     }
 
     const newKeyObject = {
