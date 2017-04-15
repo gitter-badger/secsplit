@@ -15,7 +15,7 @@ You can seperate documents out to different physical (or digital) locations. Ass
 You can install it like:
 ```bash
 npm install -g secsplit
-``` 
+```
 
 # How do I use this thing?
 
@@ -127,6 +127,13 @@ shred -n 200 -z -u ~/reportshard/secsplit.skey && mv ~/reportshard/new.skey ~/re
 Or for a more risky approach:
 ```bash
 secsplit chpass -p jupiter -n jupiter -k ~/reportshard/secsplit.skey -o ~/reportshard/secsplit.skey
+```
+
+## Wiping command history
+
+Be careful - lots of shells log the commands that you type. This is bad because it also logs your password. You can wipe the shell history if you'd like to, though. For bash, this is:
+```bash
+history -c
 ```
 
 # I have an error
