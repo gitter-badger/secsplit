@@ -136,6 +136,11 @@ Be careful - lots of shells log the commands that you type. This is bad because 
 history -c
 ```
 
+Alternatively, you might be able to disable logging by doing:
+```bash
+set +o history # Stop logging commands
+set -o history # Start logging commands again
+```
 # I have an error
 
 The argument checking currently consists of a simple validator, and doesn't report which argument is missing/faulty, so secsplit gives very generic errors most of the time. I'll fix this soon.
