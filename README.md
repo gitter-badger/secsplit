@@ -91,6 +91,20 @@ Note that we use shred to delete the original shard. You should only do this onc
 
 Also, note that you should *not* include both the original shard and the subshards when merging, as the subshards xor together to make the original shard.
 
+## Gluing back together
+
+Ok so I made a mistake and created too many shards for one of my files. Rather than regenerating the whole sharding process, I added the ability to glue shards back together.
+
+You can do so like this:
+```bash
+secsplit glue -p <your password> -k <shard key file> -i <subshard path> <subshard path> ... -o <merged shard>
+```
+
+For example:
+```bash
+secsplit glue -p jupiter -k ~/reportshard/secsplit.skey -i ~/reportshard/shards/3.shard ~/reportshard/shards/4.shard -o ~/reportshard/shards/3merge.shard
+shred -n 200 -z -u ~/reportshard/shards/3.shard && shred -n 200 -z -u ~/reportshard/shards/4.shard && mv ~/reportshard/shards/3merge.shard ~/reportshard/shards/3.shard
+```
 
 ## Changing your password
 

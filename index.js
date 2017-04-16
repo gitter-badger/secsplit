@@ -15,7 +15,7 @@ const enc = require('./enc.js');
 
 
 // Constants
-const VALID_COMMANDS = ['shard', 'reshard', 'merge', 'chpass', 'genkey'];
+const VALID_COMMANDS = ['shard', 'reshard', 'merge', 'chpass', 'genkey', 'glue'];
 const SHARD_ARGS = [
     { name: 'password', alias: 'p', type: String, required: true },
     { name: 'key', alias: 'k', type: String, required: true, validator: isFile },
@@ -34,6 +34,12 @@ const MERGE_ARGS = [
     { name: 'input', alias: 'i', multiple: true, type: String, required: true, validator: (paths) => { return paths.every(isFile) } },
     { name: 'output', alias: 'o', type: String, required: true }
 ];
+const GLUE_ARGS = [
+    { name: 'password', alias: 'p', type: String, required: true },
+    { name: 'key', alias: 'k', type: String, required: true, validator: isFile },
+    { name: 'input', alias: 'i', multiple: true, type: String, required: true, validator: (paths) => { return paths.every(isFile) } },
+    { name: 'output', alias: 'o', type: String, required: true }
+]
 const CHPASS_ARGS = [
     { name: 'oldpassword', alias: 'p', type: String, required: true },
     { name: 'newpassword', alias: 'n', type: String, required: true },
@@ -43,7 +49,7 @@ const CHPASS_ARGS = [
 const GENKEY_ARGS = [
     { name: 'password', alias: 'p', type: String, required: true },
     { name: 'output', alias: 'o', type: String, required: true }
-]
+];
 
 
 // Application
@@ -196,6 +202,52 @@ else if(command === 'merge') {
     }, shards.pop());
 
     writeFile(options.output, original);
+}
+
+else if(command === 'glue') {
+    const options = commandLineArgs(GLUE_ARGS, argv);
+    if(!validator(GLUE_ARGS, options)) quitApplication('Invalid arguments', 0);
+
+    const key = JSON.parse(fs.readFileSync(options.key));
+    if(key.type !== 'key' || !key.salt || !key.enc || !key.iv || !key.tag) {
+        quitApplication('Invalid key', 0);
+    }
+
+    const masterKey = enc.generateMasterKey(options.password, b64ToStr(key.salt));
+    const shardKeyObject = enc.decrypt(b64ToStr(key.enc), masterKey, b64ToStr(key.iv), b64ToStr(key.tag));
+
+    if(!shardKeyObject.pass) {
+        quitApplication('Shard key invalid, or password is incorrect', 0);
+    }
+
+    const shardKey = shardKeyObject.decrypted;
+
+    const shards = options.input.map((shardPath) => {
+        const encryptedOriginalShard = JSON.parse(fs.readFileSync(shardPath));
+        if(encryptedOriginalShard.type !== 'shard' || !encryptedOriginalShard.enc || !encryptedOriginalShard.iv || !encryptedOriginalShard.tag) {
+            quitApplication('Invalid shard: ' + shardPath, 0);
+        }
+
+        const originalShardObject = enc.decrypt(b64ToStr(encryptedOriginalShard.enc), shardKey, b64ToStr(encryptedOriginalShard.iv), b64ToStr(encryptedOriginalShard.tag));
+
+        if(!originalShardObject.pass) {
+            quitApplication('Shard corrupt/modified', 0);
+        }
+        return originalShardObject.decrypted;
+    });
+    const mergedShard = shards.reduce((a, v) => {
+        return enc.xor(a, v);
+    }, shards.pop());
+
+    const encryptedShardObject = {
+        type: 'shard',
+        iv: strToB64(enc.generateRandomBytes(12))
+    }
+    const encrypted = enc.encrypt(mergedShard, shardKey, b64ToStr(encryptedShardObject.iv));
+    encryptedShardObject['enc'] = strToB64(encrypted.encrypted);
+    encryptedShardObject['tag'] = strToB64(encrypted.tag);
+
+    writeFile(options.output, JSON.stringify(encryptedShardObject));
 }
 
 else if(command === 'chpass') {
