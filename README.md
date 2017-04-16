@@ -84,7 +84,7 @@ Again, `...` indicates that you can supply as many shards as you want, but you m
 
 For example:
 ```bash
-secsplit reshard -p jupiter -l ~/reportshard/secsplit.skey -i ~/reportshard/shards/3.shard -o ~/reportshard/shards/3sub1.shard ~/reportshard/shards/3sub2.shard
+secsplit reshard -p jupiter -k ~/reportshard/secsplit.skey -i ~/reportshard/shards/3.shard -o ~/reportshard/shards/3sub1.shard ~/reportshard/shards/3sub2.shard
 shred -n 200 -z -u ~/reportshard/shards/3.shard && mv ~/reportshard/shards/3sub1.shard ~/reportshard/shards/3.shard && mv ~/reportshard/shards/3sub2.shard ~/reportshard/shards/4.shard # SEE NOTES BELOW BEFORE RUNNING THIS LINE
 ```
 Note that we use shred to delete the original shard. You should only do this once you're sure that the new shards work, but you should be sure to do this (else the new shards are effectively bypassed by the old one).
