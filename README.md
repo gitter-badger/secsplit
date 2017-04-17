@@ -1,8 +1,6 @@
 # secsplit
 An alpha document splitter. It's new, so it's nearly guaranteed to be insecure.
 
-Actually, we don't even obscure the password field (it's a command line argument), so it is *not* ready for production.
-
 You have been warned.
 
 # Notices
