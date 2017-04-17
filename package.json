@@ -21,7 +21,8 @@
     "command-line-args": "^4.0.2",
     "command-line-commands": "^2.0.0",
     "mkdirp": "^0.5.1",
-    "node-forge": "^0.7.1"
+    "node-forge": "^0.7.1",
+    "readline-sync": "^1.4.7"
   },
   "bin": {
     "secsplit": "bin/secsplit"

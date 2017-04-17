@@ -7,6 +7,7 @@ const path = require('path');
 const commandLineCommands = require('command-line-commands');
 const commandLineArgs = require('command-line-args');
 const mkdirp = require('mkdirp');
+const readlineSync = require('readline-sync');
 
 
 // Internal imports
@@ -17,7 +18,6 @@ const enc = require('./enc.js');
 // Constants
 const VALID_COMMANDS = ['shard', 'reshard', 'merge', 'chpass', 'genkey', 'glue'];
 const SHARD_ARGS = [
-    { name: 'password', alias: 'p', type: String, required: true },
     { name: 'key', alias: 'k', type: String, required: true, validator: isFile },
     { name: 'input', alias: 'i', type: String, required: true, validator: isFile },
     { name: 'output', alias: 'o', multiple: true, type: String, required: true, validator: (paths) => { return paths.length >= 2 } },
@@ -25,31 +25,25 @@ const SHARD_ARGS = [
     { name: 'minjunk', alias: 'm', type: Number, defaultValue: 0, required: true, validator: (minjunk) => { return Math.floor(minjunk) === minjunk && minjunk >= 0 } }
 ];
 const RESHARD_ARGS = [
-    { name: 'password', alias: 'p', type: String, required: true },
     { name: 'key', alias: 'k', type: String, required: true, validator: isFile },
     { name: 'input', alias: 'i', type: String, required: true, validator: isFile },
     { name: 'output', alias: 'o', multiple: true, type: String, required: true, validator: (paths) => { return paths.length >= 2 } }
 ];
 const MERGE_ARGS = [
-    { name: 'password', alias: 'p', type: String, required: true },
     { name: 'key', alias: 'k', type: String, required: true, validator: isFile },
     { name: 'input', alias: 'i', multiple: true, type: String, required: true, validator: (paths) => { return paths.every(isFile) } },
     { name: 'output', alias: 'o', type: String, required: true }
 ];
 const GLUE_ARGS = [
-    { name: 'password', alias: 'p', type: String, required: true },
     { name: 'key', alias: 'k', type: String, required: true, validator: isFile },
     { name: 'input', alias: 'i', multiple: true, type: String, required: true, validator: (paths) => { return paths.every(isFile) } },
     { name: 'output', alias: 'o', type: String, required: true }
 ]
 const CHPASS_ARGS = [
-    { name: 'oldpassword', alias: 'p', type: String, required: true },
-    { name: 'newpassword', alias: 'n', type: String, required: true },
     { name: 'oldkey', alias: 'k', type: String, required: true, validator: isFile },
     { name: 'newkey', alias: 'o', type: String, required: true }
 ];
 const GENKEY_ARGS = [
-    { name: 'password', alias: 'p', type: String, required: true },
     { name: 'output', alias: 'o', type: String, required: true }
 ];
 
@@ -78,6 +72,8 @@ const {command, argv} = commandLineCommands(VALID_COMMANDS);
 if(command === 'shard') {
     const options = commandLineArgs(SHARD_ARGS, argv);
     if(!validator(SHARD_ARGS, options)) quitApplication('Invalid arguments', 0);
+
+    options.password = readlineSync.question('Shard key password: ', { hideEchoBack: true });
 
     const key = JSON.parse(fs.readFileSync(options.key));
     if(key.type !== 'key' || !key.salt || !key.enc || !key.iv || !key.tag) {
@@ -127,6 +123,8 @@ if(command === 'shard') {
 else if(command === 'reshard') {
     const options = commandLineArgs(RESHARD_ARGS, argv);
     if(!validator(RESHARD_ARGS, options)) quitApplication('Invalid arguments', 0);
+
+    options.password = readlineSync.question('Shard key password: ', { hideEchoBack: true });
 
     const key = JSON.parse(fs.readFileSync(options.key));
     if(key.type !== 'key' || !key.salt || !key.enc || !key.iv || !key.tag) {
@@ -180,6 +178,8 @@ else if(command === 'merge') {
     const options = commandLineArgs(MERGE_ARGS, argv);
     if(!validator(MERGE_ARGS, options)) quitApplication('Invalid arguments', 0);
 
+    options.password = readlineSync.question('Shard key password: ', { hideEchoBack: true });
+
     const key = JSON.parse(fs.readFileSync(options.key));
     if(key.type !== 'key' || !key.salt || !key.enc || !key.iv || !key.tag) {
         quitApplication('Invalid key', 0);
@@ -218,6 +218,8 @@ else if(command === 'merge') {
 else if(command === 'glue') {
     const options = commandLineArgs(GLUE_ARGS, argv);
     if(!validator(GLUE_ARGS, options)) quitApplication('Invalid arguments', 0);
+
+    options.password = readlineSync.question('Shard key password: ', { hideEchoBack: true });
 
     const key = JSON.parse(fs.readFileSync(options.key));
     if(key.type !== 'key' || !key.salt || !key.enc || !key.iv || !key.tag) {
@@ -265,6 +267,12 @@ else if(command === 'chpass') {
     const options = commandLineArgs(CHPASS_ARGS, argv);
     if(!validator(CHPASS_ARGS, options)) quitApplication('Invalid arguments', 0);
 
+    options.oldpassword = readlineSync.question('Current shard key password: ', { hideEchoBack: true });
+    options.newpassword = readlineSync.question('New shard key password: ', { hideEchoBack: true });
+    if(readlineSync.question('Confirm new shard key password: ', { hideEchoBack: true }) !== options.newpassword) {
+        quitApplication('Passwords don\'t match', 0);
+    }
+
     const oldKey = JSON.parse(fs.readFileSync(options.oldkey));
 
     if(oldKey.type !== 'key' || !oldKey.salt || !oldKey.enc || !oldKey.iv || !oldKey.tag) {
@@ -299,6 +307,11 @@ else if(command === 'chpass') {
 else if(command === 'genkey') {
     const options = commandLineArgs(GENKEY_ARGS, argv);
     if(!validator(GENKEY_ARGS, options)) quitApplication('Invalid arguments', 0);
+
+    options.password = readlineSync.question('New shard key password: ', { hideEchoBack: true });
+    if(readlineSync.question('Confirm new shard key password: ', { hideEchoBack: true }) !== options.password) {
+        quitApplication('Passwords don\'t match', 0);
+    }
 
     const keyObject = {
         type: 'key',

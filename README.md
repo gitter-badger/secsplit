@@ -8,6 +8,7 @@ You have been warned.
 # Notices
 
 1. *IMPORTANT:* If you have created shards before version 0.3.0, you'll need to continue using the latest legacy structure version (0.2.0), or reshard your document. The latter is preferred, as the new version attempts to hide the length of your document a little better.
+2. Passwords are now prompted for, and the command line option has been removed for security. You'll be prompted for these passwords.
 
 # What's the use of it?
 
@@ -35,14 +36,14 @@ So you essentially have this:
 
 ## Generating a new shard key  
 
-Firstly, you'll need to generate a new shard key, and encrypt that with a password. You can do that by running this command:
+Firstly, you'll need to generate a new shard key, and encrypt that with a password. You can do that by running this command (and entering your desired password when prompted for it):
 ```bash
-secsplit genkey -p <your password> -o <shard key output path>
+secsplit genkey -o <shard key output path>
 ```
 
 For example:
 ```bash
-secsplit genkey -p jupiter -o ~/reportshard/secsplit.skey
+secsplit genkey -o ~/reportshard/secsplit.skey
 ```
 
 Note that the salt, iv, and the actual key changes each time you run the command, even if the password is the same.
@@ -52,23 +53,25 @@ Note that the salt, iv, and the actual key changes each time you run the command
 
 Now that you have a shard key generated, you can now shard a document by using this command:
 ```bash
-secsplit shard -p <your password> -k <shard key file> -i <document path> -o <shard path> <shard path> ...
+secsplit shard -k <shard key file> -i <document path> -o <shard path> <shard path> ...
 ```
 Where `...` indicates that you can supply as many shards as you want. Note that you must supply at least two paths to save shards in.
 
+You'll be prompted for your password that you set when generating the key file.
+
 For example:
 ```bash
-secsplit shard -p jupiter -k ~/reportshard/secsplit.skey -i ~/Documents/report.pdf -o ~/reportshard/shards/1.shard ~/reportshard/shards/2.shard ~/reportshard/shards/3.shard
+secsplit shard -k ~/reportshard/secsplit.skey -i ~/Documents/report.pdf -o ~/reportshard/shards/1.shard ~/reportshard/shards/2.shard ~/reportshard/shards/3.shard
 ```
 
 You can also modify how much junk random data is added to your document (which is removed when you merge), like so:
 ```bash
-secsplit shard -p <your password> -k <shard key file> -i <document path> -o <shard path> <shard path> ... -j <maximum amount of junk to add> -m <minimum amount of junk to add>
+secsplit shard -k <shard key file> -i <document path> -o <shard path> <shard path> ... -j <maximum amount of junk to add> -m <minimum amount of junk to add>
 ```
 
 For example:
 ```bash
-secsplit shard -p jupiter -k ~/reportshard/secsplit.skey -i ~/Documents/report.pdf -o ~/reportshard/shards/1.shard ~/reportshard/shards/2.shard ~/reportshard/shards/3.shard -m 100 -j 1100
+secsplit shard -k ~/reportshard/secsplit.skey -i ~/Documents/report.pdf -o ~/reportshard/shards/1.shard ~/reportshard/shards/2.shard ~/reportshard/shards/3.shard -m 100 -j 1100
 ```
 This will add a random amount of bytes (but between 100 and 1100 bytes inclusive) to your document _whilst encrypted_. This will not affect your document when unencrypted/merged together.
 
@@ -79,12 +82,12 @@ Note that if unspecified, the default values are `minimum = 0` and `maximum = 10
 
 Ok. So you've got the shards, and now you want to use them to recreate your document (after you probably used a command like `shred` on it). You can merge shards back into the document like so:
 ```bash
-secsplit merge -p <your password> -o <shard key file> -i <shard path> <shard path> ... -o <merge output path>
+secsplit merge -o <shard key file> -i <shard path> <shard path> ... -o <merge output path>
 ```
 
 For example:
 ```bash
-secsplit merge -p jupiter -o ~/reportshard/secsplit.skey -i ~/reportshard/shards/1.shard ~/reportshard/shards/2.shard ~/reportshard/shards/3.shard -o ~/Documents/merged-report.pdf
+secsplit merge -o ~/reportshard/secsplit.skey -i ~/reportshard/shards/1.shard ~/reportshard/shards/2.shard ~/reportshard/shards/3.shard -o ~/Documents/merged-report.pdf
 ```
 
 If you don't see your original file, you're missing a shard somewhere.
@@ -94,13 +97,13 @@ If you don't see your original file, you're missing a shard somewhere.
 
 You've now realised that you want additional shards. Rather treating the shard as another document, you can actually reshard. This will unencrypt the shard, and then create additional files, like so:
 ```bash
-secsplit reshard -p <your password> -k <shard key file> -i <original shard> -o <subshard path> <subshard path> ...
+secsplit reshard -k <shard key file> -i <original shard> -o <subshard path> <subshard path> ...
 ```
 Again, `...` indicates that you can supply as many shards as you want, but you must still have a minimum of two.
 
 For example:
 ```bash
-secsplit reshard -p jupiter -k ~/reportshard/secsplit.skey -i ~/reportshard/shards/3.shard -o ~/reportshard/shards/3sub1.shard ~/reportshard/shards/3sub2.shard
+secsplit reshard -k ~/reportshard/secsplit.skey -i ~/reportshard/shards/3.shard -o ~/reportshard/shards/3sub1.shard ~/reportshard/shards/3sub2.shard
 shred -n 200 -z -u ~/reportshard/shards/3.shard && mv ~/reportshard/shards/3sub1.shard ~/reportshard/shards/3.shard && mv ~/reportshard/shards/3sub2.shard ~/reportshard/shards/4.shard # SEE NOTES BELOW BEFORE RUNNING THIS LINE
 ```
 Note that we use shred to delete the original shard. You should only do this once you're sure that the new shards work, but you should be sure to do this (else the new shards are effectively bypassed by the old one).
@@ -113,12 +116,12 @@ Ok so I made a mistake and created too many shards for one of my files. Rather t
 
 You can do so like this:
 ```bash
-secsplit glue -p <your password> -k <shard key file> -i <subshard path> <subshard path> ... -o <merged shard>
+secsplit glue -k <shard key file> -i <subshard path> <subshard path> ... -o <merged shard>
 ```
 
 For example:
 ```bash
-secsplit glue -p jupiter -k ~/reportshard/secsplit.skey -i ~/reportshard/shards/3.shard ~/reportshard/shards/4.shard -o ~/reportshard/shards/3merge.shard
+secsplit glue -k ~/reportshard/secsplit.skey -i ~/reportshard/shards/3.shard ~/reportshard/shards/4.shard -o ~/reportshard/shards/3merge.shard
 shred -n 200 -z -u ~/reportshard/shards/3.shard && shred -n 200 -z -u ~/reportshard/shards/4.shard && mv ~/reportshard/shards/3merge.shard ~/reportshard/shards/3.shard
 ```
 
@@ -126,51 +129,24 @@ shred -n 200 -z -u ~/reportshard/shards/3.shard && shred -n 200 -z -u ~/reportsh
 
 You can change your password by using the following command:
 ```bash
-secsplit chpass -p <old password> -n <new password> -k <old shard key location> -o <new shard key location>
+secsplit chpass -k <old shard key location> -o <new shard key location>
 ```
+
+You should enter your old password, and desired new password when prompted.
 
 For example:
 ```bash
-secsplit chpass -p jupiter -n mercury -k ~/reportshard/secsplit.skey -o ~/reportshard/new.skey
+secsplit chpass -k ~/reportshard/secsplit.skey -o ~/reportshard/new.skey
 shred -n 200 -z -u ~/reportshard/secsplit.skey && mv ~/reportshard/new.skey ~/reportshard/secsplit.skey # Again, run this only once you're sure that the above has worked
 ```
 
 You could also use this (although this is more risky):
 ```bash
-secsplit chpass -p jupiter -n mercury -k ~/reportshard/secsplit.skey -o ~/reportshard/secsplit.skey
+secsplit chpass -k ~/reportshard/secsplit.skey -o ~/reportshard/secsplit.skey
 ```
 
-## Regenerating the master key
+Note that you can set the same password to regenerate the salt, and therefore the master key.
 
-You can regenerate the master key by simply regenerating the salt, and to do that, you can simply run:
-```bash
-secsplit chpass -p <password> -n <password> -k <old shard key location> -o <new shard key location>
-shred -n 200 -z -u <old shard key location> # Yet again, only run this once you know the above has worked
-```
-
-For example:
-```bash
-secsplit chpass -p jupiter -n jupiter -k ~/reportshard/secsplit.skey -o ~/reportshard/new.skey
-shred -n 200 -z -u ~/reportshard/secsplit.skey && mv ~/reportshard/new.skey ~/reportshard/secsplit.skey
-```
-
-Or for a more risky approach:
-```bash
-secsplit chpass -p jupiter -n jupiter -k ~/reportshard/secsplit.skey -o ~/reportshard/secsplit.skey
-```
-
-## Wiping command history
-
-Be careful - lots of shells log the commands that you type. This is bad because it also logs your password. You can wipe the shell history if you'd like to, though. For bash, this is:
-```bash
-history -c
-```
-
-Alternatively, you might be able to disable logging by doing:
-```bash
-set +o history # Stop logging commands
-set -o history # Start logging commands again
-```
 # I have an error
 
 The argument checking currently consists of a simple validator, and doesn't report which argument is missing/faulty, so secsplit gives very generic errors most of the time. I'll fix this soon.
