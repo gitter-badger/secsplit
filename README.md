@@ -5,6 +5,9 @@ Actually, we don't even obscure the password field (it's a command line argument
 
 You have been warned.
 
+# Notices
+
+1. *IMPORTANT:* If you have created shards before version 0.3.0, you'll need to continue using the latest legacy structure version (0.2.0), or reshard your document. The latter is preferred, as the new version attempts to hide the length of your document a little better.
 
 # What's the use of it?
 
@@ -25,7 +28,7 @@ Let's go over the structure a little bit first. The document is the file which y
 
 So you essentially have this:
 
-* Create shards from the original document, that recreate the original document when xor'd together
+* Create shards from the original document (with some added junk random data), that recreate the original document when xor'd together
 * Encrypt shards with AES-GCM
 * Encrypt the key used for the above step (the shard key) with a key derived from a password using PBKDF2-SHA512 (the master key)
 
@@ -57,6 +60,19 @@ For example:
 ```bash
 secsplit shard -p jupiter -k ~/reportshard/secsplit.skey -i ~/Documents/report.pdf -o ~/reportshard/shards/1.shard ~/reportshard/shards/2.shard ~/reportshard/shards/3.shard
 ```
+
+You can also modify how much junk random data is added to your document (which is removed when you merge), like so:
+```bash
+secsplit shard -p <your password> -k <shard key file> -i <document path> -o <shard path> <shard path> ... -j <maximum amount of junk to add> -m <minimum amount of junk to add>
+```
+
+For example:
+```bash
+secsplit shard -p jupiter -k ~/reportshard/secsplit.skey -i ~/Documents/report.pdf -o ~/reportshard/shards/1.shard ~/reportshard/shards/2.shard ~/reportshard/shards/3.shard -m 100 -j 1100
+```
+This will add a random amount of bytes (but between 100 and 1100 bytes inclusive) to your document _whilst encrypted_. This will not affect your document when unencrypted/merged together.
+
+Note that if unspecified, the default values are `minimum = 0` and `maximum = 1000`.
 
 
 ## Merging back

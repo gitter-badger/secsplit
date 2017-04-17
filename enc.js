@@ -21,6 +21,26 @@ const ENCRYPTION_ALGORITHM = 'AES-GCM';
 function generateRandomBytes(bytes) {
     return forge.random.getBytesSync(bytes);
 }
+function getRandomBytesNeeded(min, max) {
+    return Math.ceil(Math.ceil(Math.log2(max - min + 1))/8)
+}
+function generateRandomInteger(min, max) {
+    if(min === max) {
+        return min;
+    }
+    if(min > max) {
+        [min, max] = [max, min];
+    }
+    while(true) {
+        const randomBytesNeeded = getRandomBytesNeeded(min, max);
+        const randomNumber = Buffer.from(generateRandomBytes(randomBytesNeeded), 'binary').readUIntBE(0, randomBytesNeeded);
+        const smallestPowerOf2 = Math.pow(2, Math.ceil(Math.log2(max - min + 1)));
+        const reducedRandomNumber = randomNumber % smallestPowerOf2;
+        if(reducedRandomNumber <= max - min) {
+            return reducedRandomNumber + min;
+        }
+    }
+}
 
 function generateMasterKey(password, salt) {
     return forge.pkcs5.pbkdf2(password, salt, MASTER_KEY_ITERATIONS, MASTER_KEY_BYTES, MASTER_KEY_MESSAGE_DIGEST);
@@ -68,6 +88,8 @@ function shard(original) {
 
 // Exports
 module.exports.generateRandomBytes = generateRandomBytes;
+module.exports.getRandomBytesNeeded = getRandomBytesNeeded;
+module.exports.generateRandomInteger = generateRandomInteger;
 
 module.exports.generateMasterKey = generateMasterKey;
 module.exports.generateMasterKeySalt = generateMasterKeySalt;

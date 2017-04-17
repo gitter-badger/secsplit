@@ -20,7 +20,9 @@ const SHARD_ARGS = [
     { name: 'password', alias: 'p', type: String, required: true },
     { name: 'key', alias: 'k', type: String, required: true, validator: isFile },
     { name: 'input', alias: 'i', type: String, required: true, validator: isFile },
-    { name: 'output', alias: 'o', multiple: true, type: String, required: true, validator: (paths) => { return paths.length >= 2 } }
+    { name: 'output', alias: 'o', multiple: true, type: String, required: true, validator: (paths) => { return paths.length >= 2 } },
+    { name: 'maxjunk', alias: 'j', type: Number, defaultValue: 1000, required: true, validator: (maxjunk) => { return Math.floor(maxjunk) === maxjunk && maxjunk >= 0 } },
+    { name: 'minjunk', alias: 'm', type: Number, defaultValue: 0, required: true, validator: (minjunk) => { return Math.floor(minjunk) === minjunk && minjunk >= 0 } }
 ];
 const RESHARD_ARGS = [
     { name: 'password', alias: 'p', type: String, required: true },
@@ -91,7 +93,15 @@ if(command === 'shard') {
 
     const shardKey = shardKeyObject.decrypted;
 
-    const shards = [fs.readFileSync(options.input)];
+    const doc = fs.readFileSync(options.input, 'binary');
+    const totalRandomBytes = enc.generateRandomInteger(options.minjunk, options.maxjunk);
+    const randomBytes = enc.generateRandomBytes(totalRandomBytes);
+    const documentObject = {
+        doc: doc,
+        junk: randomBytes
+    }
+
+    const shards = [JSON.stringify(documentObject)];
 
     for(let i = 0; i < options.output.length - 1; i++) {
         const newShards = enc.shard(shards.shift());
@@ -197,10 +207,11 @@ else if(command === 'merge') {
         }
         return originalShardObject.decrypted;
     });
-    const original = shards.reduce((a, v) => {
+    const originalJSON = shards.reduce((a, v) => {
         return enc.xor(a, v);
     }, shards.pop());
 
+    const original = JSON.parse(originalJSON).doc;
     writeFile(options.output, original);
 }
 
