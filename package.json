@@ -1,6 +1,6 @@
 {
   "name": "secsplit",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A currently not-secure information splitter. Relies on XOR one time pads combined with AES-GCM for verification Edit",
   "main": "index.js",
   "scripts": {
