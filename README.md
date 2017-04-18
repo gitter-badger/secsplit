@@ -1,4 +1,6 @@
 # secsplit
+
+[![Join the chat at https://gitter.im/secsplit/Lobby](https://badges.gitter.im/secsplit/Lobby.svg)](https://gitter.im/secsplit/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 An alpha document splitter. It's new, so it's nearly guaranteed to be insecure.
 
 You have been warned.
